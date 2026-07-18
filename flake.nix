@@ -13,9 +13,21 @@
     };
   };
 
-  outputs = inputs@{ nixpkgs, home-manager, nix-darwin, ... }:
+  outputs =
+    inputs@{
+      nixpkgs,
+      home-manager,
+      nix-darwin,
+      ...
+    }:
     let
-      mkHome = { system, username, homeDirectory, extraModules ? [ ] }:
+      mkHome =
+        {
+          system,
+          username,
+          homeDirectory,
+          extraModules ? [ ],
+        }:
         home-manager.lib.homeManagerConfiguration {
           pkgs = import nixpkgs { inherit system; };
           modules = [
@@ -25,10 +37,16 @@
             {
               home = { inherit username homeDirectory; };
             }
-          ] ++ extraModules;
+          ]
+          ++ extraModules;
           extraSpecialArgs = { inherit inputs; };
         };
-      mkDarwin = { system, username, homeDirectory }:
+      mkDarwin =
+        {
+          system,
+          username,
+          homeDirectory,
+        }:
         nix-darwin.lib.darwinSystem {
           inherit system;
           specialArgs = { inherit inputs; };
@@ -48,7 +66,10 @@
                 useGlobalPkgs = true;
                 useUserPackages = true;
                 users.${username} = {
-                  imports = [ ./home/default.nix ./home/darwin.nix ];
+                  imports = [
+                    ./home/default.nix
+                    ./home/darwin.nix
+                  ];
                   home = { inherit username homeDirectory; };
                 };
               };
