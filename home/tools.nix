@@ -8,5 +8,6 @@
     jq
     neovim
     ripgrep
+    lazygit
   ];
 }

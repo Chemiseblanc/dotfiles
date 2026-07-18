@@ -5,14 +5,10 @@
     enable = true;
     brews = [ "mas" ];
     casks = [
-      "1password"
-      "firefox"
       "ghostty"
-      "visual-studio-code"
     ];
     masApps = {
-      WireGuard = 1451685025;
-      Xcode = 497799835;
+      # Xcode = 497799835;
     };
     onActivation = {
       autoUpdate = false;

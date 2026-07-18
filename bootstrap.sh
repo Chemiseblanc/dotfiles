@@ -19,7 +19,7 @@ OS_NAME=$(uname -s) || die 'could not determine operating system'
 ARCH_NAME=$(uname -m) || die 'could not determine architecture'
 case "$OS_NAME:$ARCH_NAME" in
   Darwin:arm64) NIX_SYSTEM=aarch64-darwin ;;
-  Darwin:x86_64) NIX_SYSTEM=x86_64-darwin ;;
+  # Darwin:x86_64) NIX_SYSTEM=x86_64-darwin ;;
   Linux:x86_64) NIX_SYSTEM=x86_64-linux ;;
   Linux:aarch64 | Linux:arm64) NIX_SYSTEM=aarch64-linux ;;
   *) die "unsupported platform: $OS_NAME $ARCH_NAME" ;;
@@ -96,7 +96,7 @@ EOF_DARWIN
       modules = [{
         home.username = "$USER_NAME";
         home.homeDirectory = "$HOME";
-        home.stateVersion = "24.11";
+        home.stateVersion = "26.11";
         home.packages = [ pkgs.git ];
         programs.home-manager.enable = true;
       }];
