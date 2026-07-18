@@ -85,11 +85,6 @@
           username = "example";
           homeDirectory = "/Users/example";
         };
-        example-darwin-x86_64 = mkDarwin {
-          system = "x86_64-darwin";
-          username = "example";
-          homeDirectory = "/Users/example";
-        };
       };
       homeConfigurations = {
         "example@linux-x86_64" = mkHome {
