@@ -23,8 +23,6 @@
       ...
     }:
     let
-      nixpkgsConfig.allowUnfreePredicate =
-        pkg: nixpkgs.lib.getName pkg == "github-copilot-cli";
       mkHome =
         {
           system,
