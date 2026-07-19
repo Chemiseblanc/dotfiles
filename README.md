@@ -28,21 +28,20 @@ The checkout is `${XDG_CONFIG_HOME:-$HOME/.config}/dotfiles`. Override it with
 `DOTFILES_DIR`, and override the public HTTPS source with `DOTFILES_REPOSITORY`
 (for example, an already-authenticated SSH remote).
 
-## Host configuration names
+## Configuration selection
 
 The flake intentionally supplies safe example configurations rather than
-pretending to know personal host names. Copy or rename the relevant example in
-`flake.nix` to match the value below before bootstrapping:
+pretending to know personal host names. After cloning the repository, bootstrap
+lists the configurations whose Nix system matches the current platform and
+prompts for one by number:
 
-- macOS uses `scutil --get LocalHostName` (or `hostname -s` as a fallback).
-  Its attribute must be `darwinConfigurations.<LocalHostName>`.
-- Linux uses `$(id -un)@$(hostname -s)`. Its attribute must be
-  `homeConfigurations."<user>@<short-hostname>"`.
+- macOS lists matching attributes from `darwinConfigurations`.
+- Linux lists matching attributes from `homeConfigurations`.
 
-Until an attribute has that name, select the example explicitly, e.g.
+For an unattended run, select a configuration explicitly, e.g.
 `DOTFILES_HOME_CONFIG=example@linux-x86_64` or
-`DOTFILES_DARWIN_CONFIG=example-darwin-aarch64`. The bootstrap supports these
-overrides and does not rename an existing checkout.
+`DOTFILES_DARWIN_CONFIG=example-darwin-aarch64`. These overrides skip the
+prompt. Bootstrap does not rename an existing checkout.
 
 Useful bootstrap controls are `BOOTSTRAP_KEEP_TEMP=1` to retain the disposable
 flake, and `BOOTSTRAP_DRY_RUN=1` to print operations without installing,
@@ -97,7 +96,7 @@ Nix packages to emulate casks.
 Sign into the Mac App Store first. `mas` uses that existing session, and
 removing an entry from `masApps` may not uninstall an already installed app.
 
-`darwin/homebrew.nix` starts with `cleanup = "none"`, which is safest while
+`platforms/darwin/homebrew.nix` starts with `cleanup = "none"`, which is safest while
 migrating. After the declaration is complete, consider `cleanup = "uninstall"`.
 `cleanup = "zap"` is more destructive and is deliberately not the default.
 
@@ -105,5 +104,5 @@ migrating. After the declaration is complete, consider `cleanup = "uninstall"`.
 
 Git is enabled but no identity is invented. Set `programs.git.userName` and
 `programs.git.userEmail` in a private host module or uncomment the documented
-placeholders in `home/git.nix`. macOS defaults are isolated in
-`darwin/defaults.nix` and are conservative by default.
+placeholders in `common/git.nix`. macOS defaults are isolated in
+`platforms/darwin/defaults.nix` and are conservative by default.

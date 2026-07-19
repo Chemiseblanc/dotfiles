@@ -26,14 +26,15 @@
           system,
           username,
           homeDirectory,
+          hostModule,
           extraModules ? [ ],
         }:
         home-manager.lib.homeManagerConfiguration {
           pkgs = import nixpkgs { inherit system; };
           modules = [
-            ./home/default.nix
-            ./hosts/linux/default.nix
-            ./home/linux.nix
+            ./common
+            ./platforms/linux
+            hostModule
             {
               home = { inherit username homeDirectory; };
             }
@@ -46,13 +47,13 @@
           system,
           username,
           homeDirectory,
+          hostModule,
         }:
         nix-darwin.lib.darwinSystem {
           inherit system;
           specialArgs = { inherit inputs; };
           modules = [
-            ./hosts/darwin/default.nix
-            ./darwin/default.nix
+            ./platforms/darwin
             home-manager.darwinModules.home-manager
             {
               nixpkgs.hostPlatform = system;
@@ -67,23 +68,25 @@
                 useUserPackages = true;
                 users.${username} = {
                   imports = [
-                    ./home/default.nix
-                    ./home/darwin.nix
+                    ./common
+                    ./platforms/darwin/home.nix
                   ];
                   home = { inherit username homeDirectory; };
                 };
               };
             }
+            hostModule
           ];
         };
     in
     {
       # Rename/copy these examples to your LocalHostName or user@short-hostname.
       darwinConfigurations = {
-        example-darwin-aarch64 = mkDarwin {
+        mbp-m5pro-darwin-aarch64 = mkDarwin {
           system = "aarch64-darwin";
-          username = "example";
-          homeDirectory = "/Users/example";
+          username = "matt";
+          homeDirectory = "/Users/matt";
+          hostModule = ./hosts/mbp-m5pro-darwin-aarch64.nix;
         };
       };
       homeConfigurations = {
@@ -91,11 +94,13 @@
           system = "x86_64-linux";
           username = "example";
           homeDirectory = "/home/example";
+          hostModule = ./hosts/example-linux-x86_64.nix;
         };
         "example@linux-aarch64" = mkHome {
           system = "aarch64-linux";
           username = "example";
           homeDirectory = "/home/example";
+          hostModule = ./hosts/example-linux-aarch64.nix;
         };
       };
     };

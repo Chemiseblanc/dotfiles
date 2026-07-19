@@ -1,6 +1,6 @@
 { ... }:
 {
-  home.stateVersion = "24.11";
+  home.stateVersion = "26.05";
 
   home.sessionVariables = {
     EDITOR = "nvim";

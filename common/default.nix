@@ -1,7 +1,7 @@
 { ... }:
 {
   imports = [
-    ./common.nix
+    ./home.nix
     ./git.nix
     ./shell.nix
     ./direnv.nix
