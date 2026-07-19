@@ -1,4 +1,6 @@
 { ... }:
 {
-  # Linux-specific Home Manager settings belong here.
+  imports = [
+    ./maintenance.nix
+  ];
 }

@@ -111,6 +111,43 @@ cd "${XDG_CONFIG_HOME:-$HOME/.config}/dotfiles"
 nix flake update
 ```
 
+## Nix store maintenance
+
+The configuration runs Nix garbage collection weekly and removes generations
+older than 30 days. Recent generations remain available for rollbacks, and store
+paths referenced by active profiles or other garbage-collection roots are kept.
+Linux uses a persistent systemd user timer; macOS uses a system launchd daemon
+and continues to leave the externally installed Lix daemon unmanaged by
+nix-darwin.
+
+Run the same cleanup policy manually with `dotfiles-cleanup`. It defaults to 30
+days; pass another duration to override it for that run:
+
+```sh
+dotfiles-cleanup
+dotfiles-cleanup 5d
+```
+
+Inspect or trigger the Linux job with:
+
+```sh
+systemctl --user list-timers nix-garbage-collect.timer
+systemctl --user start nix-garbage-collect.service
+```
+
+On macOS:
+
+```sh
+sudo launchctl print system/org.nixos.nix-garbage-collect
+sudo launchctl kickstart -k system/org.nixos.nix-garbage-collect
+```
+
+To preview unreachable store paths without deleting them:
+
+```sh
+nix-store --gc --print-dead
+```
+
 ## Project environments
 
 Home Manager enables `direnv`, `nix-direnv`, and shell integration. In a

@@ -1,4 +1,17 @@
 { pkgs, ... }:
+let
+  dotfilesCleanup = ''
+    dotfiles-cleanup() {
+      if [ "$#" -gt 1 ]; then
+        printf '%s\n' 'usage: dotfiles-cleanup [duration]' >&2
+        return 2
+      fi
+
+      local duration="''${1:-30d}"
+      nix-collect-garbage --delete-older-than "$duration"
+    }
+  '';
+in
 {
   home.shellAliases = {
     dotfiles-update = ''
@@ -20,7 +33,11 @@
     enableCompletion = true;
     autosuggestion.enable = true;
     syntaxHighlighting.enable = true;
+    initContent = dotfilesCleanup;
   };
 
-  programs.bash.enable = true;
+  programs.bash = {
+    enable = true;
+    initExtra = dotfilesCleanup;
+  };
 }
