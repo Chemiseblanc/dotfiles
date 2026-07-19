@@ -66,9 +66,10 @@ if printf '%s\n' "$darwin_output" | grep -F 'Installing Homebrew' >/dev/null; th
 fi
 grep -F 'darwinConfigurations.bootstrap = nix-darwin.lib.darwinSystem {' \
 	"$TEST_DIR"/dotfiles-bootstrap.*/flake.nix >/dev/null
-grep -F 'nix-homebrew.darwinModules.nix-homebrew' \
-	"$TEST_DIR"/dotfiles-bootstrap.*/flake.nix >/dev/null
-grep -F 'enableRosetta = true;' "$TEST_DIR"/dotfiles-bootstrap.*/flake.nix >/dev/null
+if grep -F 'nix-homebrew' "$TEST_DIR"/dotfiles-bootstrap.*/flake.nix >/dev/null; then
+	printf '%s\n' 'temporary bootstrap configuration must not manage Homebrew' >&2
+	exit 1
+fi
 test "$(grep -l 'homeModule = { pkgs, ... }:' "$TEST_DIR"/dotfiles-bootstrap.*/flake.nix | wc -l)" -eq 2
 grep -F 'modules = [ homeModule ];' "$TEST_DIR"/dotfiles-bootstrap.*/flake.nix >/dev/null
 grep -F "home-manager.users.\"$TEST_USER\" = homeModule;" \

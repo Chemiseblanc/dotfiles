@@ -83,9 +83,8 @@ EOF_DARWIN
       url = "github:nix-darwin/nix-darwin/master";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    nix-homebrew.url = "github:zhaofengli-wip/nix-homebrew";
 EOF_DARWIN
-    OUTPUT_INPUTS='nix-darwin, nix-homebrew, '
+    OUTPUT_INPUTS='nix-darwin, '
   else
     OUTPUT_INPUTS=
   fi
@@ -114,19 +113,12 @@ write_darwin_flake() {
       system = "$NIX_SYSTEM";
       modules = [
         home-manager.darwinModules.home-manager
-        nix-homebrew.darwinModules.nix-homebrew
         {
           nixpkgs.hostPlatform = "$NIX_SYSTEM";
           # Lix is externally installed; do not let nix-darwin manage Nix.
           nix.enable = false;
           system.primaryUser = "$USER_NAME";
           users.users."$USER_NAME".home = "$HOME";
-          nix-homebrew = {
-            enable = true;
-            enableRosetta = $([ "$NIX_SYSTEM" = aarch64-darwin ] && printf true || printf false);
-            user = "$USER_NAME";
-            autoMigrate = true;
-          };
           # Do not casually change after initial activation.
           system.stateVersion = 5;
           home-manager.useGlobalPkgs = true;
