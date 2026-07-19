@@ -1,6 +1,6 @@
 { ... }:
 {
-  # Homebrew itself is installed by bootstrap.sh before this configuration activates.
+  # nix-homebrew installs Homebrew; nix-darwin manages its packages and activation behavior.
   homebrew = {
     enable = true;
     brews = [ "mas" ];

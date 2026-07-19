@@ -32,6 +32,7 @@ printf '%s\n' "$output" | grep -F 'Configurations for x86_64-linux:' >/dev/null
 printf '%s\n' "$output" | grep -F '2) work@linux-x86_64' >/dev/null
 printf '%s\n' "$output" | grep -F 'Activating Home Manager configuration work@linux-x86_64' >/dev/null
 grep -F 'homeConfigurations' "$NIX_LOG" >/dev/null
+grep -F "path:$PWD#homeConfigurations" "$NIX_LOG" >/dev/null
 grep -F 'pkgs.stdenv.hostPlatform.system == "x86_64-linux"' "$NIX_LOG" >/dev/null
 printf '%s\n' "$output" | grep -F 'Preserving temporary bootstrap files:' >/dev/null
 
@@ -54,7 +55,11 @@ printf '%s\n' "$darwin_output" | grep -F \
 	"switch --flake path:$TEST_DIR/dotfiles-bootstrap." >/dev/null
 printf '%s\n' "$darwin_output" | grep -F '#bootstrap' >/dev/null
 printf '%s\n' "$darwin_output" | grep -F "Activating nix-darwin configuration work-darwin" >/dev/null
-printf '%s\n' "$darwin_output" | grep -F "$PWD#work-darwin" >/dev/null
+printf '%s\n' "$darwin_output" | grep -F "path:$PWD#work-darwin" >/dev/null
+if printf '%s\n' "$darwin_output" | grep -F 'Installing Homebrew' >/dev/null; then
+	printf '%s\n' 'bootstrap must leave Homebrew installation to nix-homebrew' >&2
+	exit 1
+fi
 grep -F 'darwinConfigurations.bootstrap = nix-darwin.lib.darwinSystem {' \
 	"$TEST_DIR"/dotfiles-bootstrap.*/flake.nix >/dev/null
 test "$(grep -l 'homeModule = { pkgs, ... }:' "$TEST_DIR"/dotfiles-bootstrap.*/flake.nix | wc -l)" -eq 2

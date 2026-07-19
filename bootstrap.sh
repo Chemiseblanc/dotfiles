@@ -235,7 +235,7 @@ select_configuration() {
     return
   fi
 
-  CONFIG_NAMES=$(nix --extra-experimental-features 'nix-command flakes' eval --raw "$DOTFILES_DIR#$CONFIG_OUTPUT" \
+  CONFIG_NAMES=$(nix --extra-experimental-features 'nix-command flakes' eval --raw "path:$DOTFILES_DIR#$CONFIG_OUTPUT" \
     --apply "configs: builtins.concatStringsSep \"\\n\" (builtins.filter (name: configs.\${name}.pkgs.stdenv.hostPlatform.system == \"$NIX_SYSTEM\") (builtins.attrNames configs))") ||
     die "could not list $CONFIG_OUTPUT"
   [ -n "$CONFIG_NAMES" ] || die "no $CONFIG_OUTPUT entries support $NIX_SYSTEM"
@@ -252,50 +252,26 @@ select_configuration() {
   [ -n "$SELECTED_CONFIG" ] || die "configuration selection is out of range: $CONFIG_CHOICE"
 }
 
-install_homebrew() {
-  if [ "$PLATFORM" != darwin ]; then
-    return
-  fi
-
-  phase='installing Homebrew'
-  if command -v brew >/dev/null 2>&1; then
-    return
-  fi
-
-  log 'Installing Homebrew for nix-darwin-managed applications'
-  run /bin/sh -c '$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)' ||
-    die 'Homebrew installation failed'
-
-  if [ -x /opt/homebrew/bin/brew ]; then
-    PATH=/opt/homebrew/bin:$PATH
-    export PATH
-  fi
-  if [ -x /usr/local/bin/brew ]; then
-    PATH=/usr/local/bin:$PATH
-    export PATH
-  fi
-}
-
 activate_real() {
   phase='activating real configuration'
   if [ "$PLATFORM" = darwin ]; then
     log "Activating nix-darwin configuration $SELECTED_CONFIG"
     if command -v darwin-rebuild >/dev/null 2>&1; then
-      run sudo darwin-rebuild switch --flake "$DOTFILES_DIR#$SELECTED_CONFIG" ||
+      run sudo darwin-rebuild switch --flake "path:$DOTFILES_DIR#$SELECTED_CONFIG" ||
         die 'real nix-darwin activation failed'
     else
       run sudo nix run github:nix-darwin/nix-darwin/master#darwin-rebuild -- \
-        switch --flake "$DOTFILES_DIR#$SELECTED_CONFIG" ||
+        switch --flake "path:$DOTFILES_DIR#$SELECTED_CONFIG" ||
         die 'real nix-darwin activation failed'
     fi
   else
     log "Activating Home Manager configuration $SELECTED_CONFIG"
     if command -v home-manager >/dev/null 2>&1; then
-      run home-manager switch --flake "$DOTFILES_DIR#$SELECTED_CONFIG" ||
+      run home-manager switch --flake "path:$DOTFILES_DIR#$SELECTED_CONFIG" ||
         die 'real Home Manager activation failed'
     else
       run nix run github:nix-community/home-manager/master -- \
-        switch --flake "$DOTFILES_DIR#$SELECTED_CONFIG" ||
+        switch --flake "path:$DOTFILES_DIR#$SELECTED_CONFIG" ||
         die 'real Home Manager activation failed'
     fi
   fi
@@ -307,7 +283,6 @@ main() {
   activate_temporary
   clone_dotfiles
   select_configuration
-  install_homebrew
   activate_real
 }
 

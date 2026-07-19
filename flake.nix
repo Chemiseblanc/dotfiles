@@ -11,6 +11,7 @@
       url = "github:nix-darwin/nix-darwin/master";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    nix-homebrew.url = "github:zhaofengli-wip/nix-homebrew";
   };
 
   outputs =
@@ -18,6 +19,7 @@
       nixpkgs,
       home-manager,
       nix-darwin,
+      nix-homebrew,
       ...
     }:
     let
@@ -55,12 +57,19 @@
           modules = [
             ./platforms/darwin
             home-manager.darwinModules.home-manager
+            nix-homebrew.darwinModules.nix-homebrew
             {
               nixpkgs.hostPlatform = system;
               # Lix is installed externally; nix-darwin must not take it over.
               nix.enable = false;
               system.primaryUser = username;
               users.users.${username}.home = homeDirectory;
+              nix-homebrew = {
+                enable = true;
+                enableRosetta = system == "aarch64-darwin";
+                user = username;
+                autoMigrate = true;
+              };
               # Do not casually change after the first activation.
               system.stateVersion = 5;
               home-manager = {

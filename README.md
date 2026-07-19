@@ -45,7 +45,7 @@ prompt. Bootstrap does not rename an existing checkout.
 
 Useful bootstrap controls are `BOOTSTRAP_KEEP_TEMP=1` to retain the disposable
 flake, and `BOOTSTRAP_DRY_RUN=1` to print operations without installing,
-activating, cloning, or installing Homebrew.
+activating, or cloning.
 
 ## Rebuild and update
 
@@ -82,11 +82,11 @@ direnv allow
 
 ## macOS package policy
 
-On macOS, bootstrap installs Homebrew if it is absent, after Git is available
-and before the real nix-darwin activation. This uses Homebrew's official
-installer and then recognizes either `/opt/homebrew` (Apple Silicon) or
-`/usr/local` (Intel). nix-darwin declares Homebrew packages; it does not use
-Nix packages to emulate casks.
+On macOS, `nix-homebrew` installs Homebrew during the real nix-darwin
+activation and owns its standard prefix. Existing installations are migrated
+automatically, and Apple Silicon systems also receive the Intel prefix through
+Rosetta. nix-darwin declares Homebrew packages; it does not use Nix packages
+to emulate casks.
 
 - Nixpkgs/Home Manager: ordinary terminal tools.
 - Homebrew formulae: macOS-specific or Nix-incompatible command-line tools.
