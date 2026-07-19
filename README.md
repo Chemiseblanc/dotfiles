@@ -53,6 +53,41 @@ Useful bootstrap controls are `BOOTSTRAP_KEEP_TEMP=1` to retain the disposable
 flake, and `BOOTSTRAP_DRY_RUN=1` to print operations without installing,
 activating, or cloning.
 
+## Cleanup
+
+Run the cleanup directly from the public repository:
+
+```sh
+curl -fsSL \
+  https://raw.githubusercontent.com/chemiseblanc/dotfiles/main/cleanup.sh |
+  "$SHELL"
+```
+
+The script reads confirmations from `/dev/tty`, so piping the script through the
+shell does not consume its answers. Every destructive stage defaults to no. It
+removes Home Manager and nix-darwin state first, both Homebrew prefixes on
+Apple Silicon, the dotfiles checkout, and finally Lix and the Nix store. Lix and
+Homebrew are treated as installations owned by this setup.
+
+To inspect or preview it first:
+
+```sh
+curl -fsSLo /tmp/cleanup-dotfiles.sh \
+  https://raw.githubusercontent.com/chemiseblanc/dotfiles/main/cleanup.sh
+
+less /tmp/cleanup-dotfiles.sh
+CLEANUP_DRY_RUN=1 "$SHELL" /tmp/cleanup-dotfiles.sh
+```
+
+`DOTFILES_DIR` overrides the checkout location, and `CLEANUP_INPUT` overrides
+the confirmation input for automation. When configuration removal is declined
+or fails, cleanup keeps Lix to avoid leaving active Nix-managed links without a
+working package manager. GitHub CLI authentication is preserved. User-created
+project `.envrc` files and Mac App Store applications are not removed.
+
+After cleanup, start a new login shell to discard the old environment. A macOS
+restart may be required after removing nix-darwin and Lix.
+
 ## Rebuild and update
 
 macOS:
