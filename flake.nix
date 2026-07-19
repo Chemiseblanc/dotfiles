@@ -23,6 +23,8 @@
       ...
     }:
     let
+      nixpkgsConfig.allowUnfreePredicate =
+        pkg: nixpkgs.lib.getName pkg == "github-copilot-cli";
       mkHome =
         {
           system,
@@ -32,7 +34,10 @@
           extraModules ? [ ],
         }:
         home-manager.lib.homeManagerConfiguration {
-          pkgs = import nixpkgs { inherit system; };
+          pkgs = import nixpkgs {
+            inherit system;
+            config = nixpkgsConfig;
+          };
           modules = [
             ./common
             ./platforms/linux
@@ -60,6 +65,7 @@
             nix-homebrew.darwinModules.nix-homebrew
             {
               nixpkgs.hostPlatform = system;
+              nixpkgs.config = nixpkgsConfig;
               # Lix is installed externally; nix-darwin must not take it over.
               nix.enable = false;
               system.primaryUser = username;
@@ -91,11 +97,11 @@
     {
       # Rename/copy these examples to your LocalHostName or user@short-hostname.
       darwinConfigurations = {
-        mbp-m5pro-darwin-aarch64 = mkDarwin {
+        example-darwin-aarch64 = mkDarwin {
           system = "aarch64-darwin";
-          username = "matt";
-          homeDirectory = "/Users/matt";
-          hostModule = ./hosts/mbp-m5pro-darwin-aarch64.nix;
+          username = "example";
+          homeDirectory = "/Users/example";
+          hostModule = ./hosts/example-darwin-aarch64.nix;
         };
       };
       homeConfigurations = {
