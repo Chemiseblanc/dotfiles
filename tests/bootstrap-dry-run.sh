@@ -50,11 +50,25 @@ esac
 EOF_UNAME
 cp "$TEST_DIR/bin/hostname" "$TEST_DIR/bin/nix" "$TEST_DIR/darwin-bin/"
 chmod +x "$TEST_DIR/darwin-bin/uname"
+mkdir -p "$TEST_DIR/homebrew-arm" "$TEST_DIR/homebrew-healthy/bin" \
+	"$TEST_DIR/homebrew-healthy/Homebrew/Library"
+touch "$TEST_DIR/homebrew-arm/.managed_by_nix_darwin"
+touch "$TEST_DIR/homebrew-healthy/.managed_by_nix_darwin"
 
 darwin_output=$(PATH="$TEST_DIR/darwin-bin:$PATH" TMPDIR="$TEST_DIR" BOOTSTRAP_DRY_RUN=1 \
 	DOTFILES_DARWIN_CONFIG=work-darwin DOTFILES_REPOSITORY=chemiseblanc/private-dotfiles \
+	BOOTSTRAP_HOMEBREW_ARM_PREFIX="$TEST_DIR/homebrew-arm" \
+	BOOTSTRAP_HOMEBREW_INTEL_PREFIX="$TEST_DIR/homebrew-healthy" \
 	DOTFILES_DIR=$PWD sh ./bootstrap.sh 2>&1)
 printf '%s\n' "$darwin_output" | grep -F 'Detected aarch64-darwin' >/dev/null
+printf '%s\n' "$darwin_output" | grep -F \
+	"Repairing incomplete nix-homebrew prefix $TEST_DIR/homebrew-arm" >/dev/null
+printf '%s\n' "$darwin_output" | grep -F \
+	"+ sudo rm -f $TEST_DIR/homebrew-arm/.managed_by_nix_darwin" >/dev/null
+if printf '%s\n' "$darwin_output" | grep -F "$TEST_DIR/homebrew-healthy" >/dev/null; then
+	printf '%s\n' 'bootstrap attempted to reset a complete nix-homebrew prefix' >&2
+	exit 1
+fi
 printf '%s\n' "$darwin_output" | grep -F \
 	"switch --flake path:$TEST_DIR/dotfiles-bootstrap." >/dev/null
 printf '%s\n' "$darwin_output" | grep -F '#bootstrap' >/dev/null

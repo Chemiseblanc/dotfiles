@@ -287,6 +287,26 @@ select_configuration() {
   [ -n "$SELECTED_CONFIG" ] || die "configuration selection is out of range: $CONFIG_CHOICE"
 }
 
+repair_nix_homebrew_prefix() {
+  prefix=$1
+  library=$2
+  marker=$prefix/.managed_by_nix_darwin
+  [ -e "$marker" ] || return
+  if [ ! -d "$prefix/bin" ] || [ ! -d "$library" ]; then
+    log "Repairing incomplete nix-homebrew prefix $prefix"
+    run sudo rm -f "$marker" || die "could not reset incomplete nix-homebrew prefix $prefix"
+  fi
+}
+
+repair_nix_homebrew_prefixes() {
+  [ "$PLATFORM" = darwin ] || return
+  phase='repairing Homebrew prefixes'
+  arm_prefix=${BOOTSTRAP_HOMEBREW_ARM_PREFIX:-/opt/homebrew}
+  intel_prefix=${BOOTSTRAP_HOMEBREW_INTEL_PREFIX:-/usr/local}
+  repair_nix_homebrew_prefix "$arm_prefix" "$arm_prefix/Library"
+  repair_nix_homebrew_prefix "$intel_prefix" "$intel_prefix/Homebrew/Library"
+}
+
 activate_real() {
   phase='activating real configuration'
   if [ "$PLATFORM" = darwin ]; then
@@ -318,6 +338,7 @@ main() {
   activate_temporary
   clone_dotfiles
   select_configuration
+  repair_nix_homebrew_prefixes
   activate_real
 }
 
