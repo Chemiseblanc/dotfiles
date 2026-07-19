@@ -2,9 +2,9 @@
 
 A cross-platform, flake-based development environment for macOS and Linux. The
 bootstrap is deliberately small: it installs/reuses Lix, uses a disposable
-configuration to expose Git, clones this repository, and activates the real
-configuration. Home Manager owns terminal tooling and shell setup; nix-darwin
-owns macOS integrations.
+configuration to expose Git and install Homebrew on macOS, clones this
+repository, and activates the real configuration. Home Manager owns terminal
+tooling and shell setup; nix-darwin owns macOS integrations.
 
 ## Quick start
 
@@ -82,11 +82,12 @@ direnv allow
 
 ## macOS package policy
 
-On macOS, `nix-homebrew` installs Homebrew during the real nix-darwin
-activation and owns its standard prefix. Existing installations are migrated
-automatically, and Apple Silicon systems also receive the Intel prefix through
-Rosetta. nix-darwin declares Homebrew packages; it does not use Nix packages
-to emulate casks.
+On macOS, the disposable nix-darwin configuration uses `nix-homebrew` to
+install Homebrew before activating the real configuration. The real
+configuration keeps ownership of its standard prefix. Existing installations
+are migrated automatically, and Apple Silicon systems also receive the Intel
+prefix through Rosetta. nix-darwin declares Homebrew packages; it does not use
+Nix packages to emulate casks.
 
 - Nixpkgs/Home Manager: ordinary terminal tools.
 - Homebrew formulae: macOS-specific or Nix-incompatible command-line tools.
