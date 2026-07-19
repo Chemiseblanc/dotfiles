@@ -26,8 +26,11 @@ printf '%s\n' 2 >"$TEST_DIR/choice"
 
 export NIX_LOG="$TEST_DIR/nix.log"
 output=$(PATH="$TEST_DIR/bin:$PATH" TMPDIR="$TEST_DIR" BOOTSTRAP_DRY_RUN=1 \
-	BOOTSTRAP_INPUT="$TEST_DIR/choice" DOTFILES_DIR=$PWD sh ./bootstrap.sh 2>&1)
+	BOOTSTRAP_INPUT="$TEST_DIR/choice" DOTFILES_REPOSITORY=chemiseblanc/private-dotfiles \
+	DOTFILES_DIR=$PWD sh ./bootstrap.sh 2>&1)
 printf '%s\n' "$output" | grep -F 'Detected x86_64-linux' >/dev/null
+printf '%s\n' "$output" | grep -F \
+	'Would clone chemiseblanc/private-dotfiles' >/dev/null
 printf '%s\n' "$output" | grep -F 'Configurations for x86_64-linux:' >/dev/null
 printf '%s\n' "$output" | grep -F '2) work@linux-x86_64' >/dev/null
 printf '%s\n' "$output" | grep -F 'Activating Home Manager configuration work@linux-x86_64' >/dev/null
@@ -49,7 +52,8 @@ cp "$TEST_DIR/bin/hostname" "$TEST_DIR/bin/nix" "$TEST_DIR/darwin-bin/"
 chmod +x "$TEST_DIR/darwin-bin/uname"
 
 darwin_output=$(PATH="$TEST_DIR/darwin-bin:$PATH" TMPDIR="$TEST_DIR" BOOTSTRAP_DRY_RUN=1 \
-	DOTFILES_DARWIN_CONFIG=work-darwin DOTFILES_DIR=$PWD sh ./bootstrap.sh 2>&1)
+	DOTFILES_DARWIN_CONFIG=work-darwin DOTFILES_REPOSITORY=chemiseblanc/private-dotfiles \
+	DOTFILES_DIR=$PWD sh ./bootstrap.sh 2>&1)
 printf '%s\n' "$darwin_output" | grep -F 'Detected aarch64-darwin' >/dev/null
 printf '%s\n' "$darwin_output" | grep -F \
 	"switch --flake path:$TEST_DIR/dotfiles-bootstrap." >/dev/null
@@ -69,6 +73,26 @@ test "$(grep -l 'homeModule = { pkgs, ... }:' "$TEST_DIR"/dotfiles-bootstrap.*/f
 grep -F 'modules = [ homeModule ];' "$TEST_DIR"/dotfiles-bootstrap.*/flake.nix >/dev/null
 grep -F "home-manager.users.\"$TEST_USER\" = homeModule;" \
 	"$TEST_DIR"/dotfiles-bootstrap.*/flake.nix >/dev/null
+grep -F 'home.packages = [ pkgs.git pkgs.gh ];' \
+	"$TEST_DIR"/dotfiles-bootstrap.*/flake.nix >/dev/null
+
+printf '%s\n' chemiseblanc/prompted-dotfiles >"$TEST_DIR/repository"
+prompted_output=$(PATH="$TEST_DIR/bin:$PATH" TMPDIR="$TEST_DIR" BOOTSTRAP_DRY_RUN=1 \
+	BOOTSTRAP_INPUT="$TEST_DIR/repository" DOTFILES_HOME_CONFIG=work@linux-x86_64 \
+	DOTFILES_DIR=$PWD DOTFILES_REPOSITORY='' sh ./bootstrap.sh 2>&1)
+printf '%s\n' "$prompted_output" | grep -F \
+	'Private dotfiles repository (OWNER/REPO):' >/dev/null
+printf '%s\n' "$prompted_output" | grep -F \
+	'Would clone chemiseblanc/prompted-dotfiles' >/dev/null
+
+if PATH="$TEST_DIR/bin:$PATH" TMPDIR="$TEST_DIR" BOOTSTRAP_DRY_RUN=1 \
+	DOTFILES_HOME_CONFIG=work@linux-x86_64 DOTFILES_REPOSITORY=https://github.com/example/repo \
+	DOTFILES_DIR=$PWD sh ./bootstrap.sh >"$TEST_DIR/invalid-output" 2>&1; then
+	printf '%s\n' 'bootstrap accepted a repository outside OWNER/REPO syntax' >&2
+	exit 1
+fi
+grep -F 'DOTFILES_REPOSITORY must use GitHub OWNER/REPO syntax' \
+	"$TEST_DIR/invalid-output" >/dev/null
 
 if command -v nix-instantiate >/dev/null 2>&1; then
 	for flake in "$TEST_DIR"/dotfiles-bootstrap.*/flake.nix; do

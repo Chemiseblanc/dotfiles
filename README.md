@@ -2,8 +2,9 @@
 
 A cross-platform, flake-based development environment for macOS and Linux. The
 bootstrap is deliberately small: it installs/reuses Lix, uses a disposable
-configuration to expose Git and install Homebrew on macOS, clones this
-repository, and activates the real configuration. Home Manager owns terminal
+configuration to expose Git and GitHub CLI and install Homebrew on macOS,
+authenticates GitHub CLI when needed, clones a private repository selected by
+the user, and activates the real configuration. Home Manager owns terminal
 tooling and shell setup; nix-darwin owns macOS integrations.
 
 ## Quick start
@@ -24,9 +25,14 @@ less /tmp/bootstrap-dotfiles.sh
 sh /tmp/bootstrap-dotfiles.sh
 ```
 
-The checkout is `${XDG_CONFIG_HOME:-$HOME/.config}/dotfiles`. Override it with
-`DOTFILES_DIR`, and override the public HTTPS source with `DOTFILES_REPOSITORY`
-(for example, an already-authenticated SSH remote).
+The bootstrap prompts for the private repository in GitHub `OWNER/REPO` syntax.
+If GitHub CLI has no existing login or `GH_TOKEN`, it starts the browser-based
+login flow before cloning. The checkout is
+`${XDG_CONFIG_HOME:-$HOME/.config}/dotfiles`; override it with `DOTFILES_DIR`.
+
+For an unattended run, set `DOTFILES_REPOSITORY=OWNER/REPO` and authenticate
+GitHub CLI in advance or provide `GH_TOKEN`. An existing checkout is reused
+without prompting for a repository or authenticating GitHub CLI.
 
 ## Configuration selection
 

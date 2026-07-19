@@ -53,7 +53,7 @@ fi
 
 XDG_CONFIG_HOME=${XDG_CONFIG_HOME:-"$HOME/.config"}
 DOTFILES_DIR=${DOTFILES_DIR:-"$XDG_CONFIG_HOME/dotfiles"}
-DOTFILES_REPOSITORY=${DOTFILES_REPOSITORY:-https://github.com/chemiseblanc/dotfiles.git}
+DOTFILES_REPOSITORY=${DOTFILES_REPOSITORY:-}
 BOOTSTRAP_INPUT=${BOOTSTRAP_INPUT:-/dev/tty}
 BOOTSTRAP_DIR=$(mktemp -d "${TMPDIR:-/tmp}/dotfiles-bootstrap.XXXXXX") || die 'could not create temporary directory'
 
@@ -99,7 +99,7 @@ EOF_DARWIN
         home.username = "$USER_NAME";
         home.homeDirectory = "$HOME";
         home.stateVersion = "26.05";
-        home.packages = [ pkgs.git ];
+        home.packages = [ pkgs.git pkgs.gh ];
         programs.home-manager.enable = true;
       };
     in
@@ -219,9 +219,37 @@ find_git() {
   return 1
 }
 
+find_gh() {
+  if command -v gh >/dev/null 2>&1; then
+    command -v gh
+    return
+  fi
+
+  for candidate in "$HOME/.nix-profile/bin/gh" "/etc/profiles/per-user/$USER_NAME/bin/gh" /run/current-system/sw/bin/gh; do
+    if [ -x "$candidate" ]; then
+      printf '%s\n' "$candidate"
+      return
+    fi
+  done
+
+  return 1
+}
+
+select_dotfiles_repository() {
+  if [ -z "$DOTFILES_REPOSITORY" ]; then
+    [ -r "$BOOTSTRAP_INPUT" ] || die 'cannot prompt for the private repository; set DOTFILES_REPOSITORY to OWNER/REPO'
+    printf '%s' 'Private dotfiles repository (OWNER/REPO): ' >&2
+    IFS= read -r DOTFILES_REPOSITORY <"$BOOTSTRAP_INPUT" || die 'could not read private repository'
+  fi
+
+  printf '%s\n' "$DOTFILES_REPOSITORY" | grep -Eq '^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$' ||
+    die 'DOTFILES_REPOSITORY must use GitHub OWNER/REPO syntax'
+}
+
 clone_dotfiles() {
   phase='cloning dotfiles repository'
   if [ "${BOOTSTRAP_DRY_RUN:-0}" = 1 ]; then
+    select_dotfiles_repository
     log "Would clone $DOTFILES_REPOSITORY to $DOTFILES_DIR"
     return
   fi
@@ -231,8 +259,15 @@ clone_dotfiles() {
     [ -d "$DOTFILES_DIR/.git" ] || die "destination exists and is not a Git repository: $DOTFILES_DIR"
     log "Reusing existing repository ($($GIT -C "$DOTFILES_DIR" remote get-url origin 2>/dev/null || printf 'origin unavailable'))"
   else
-    log 'Cloning dotfiles repository'
-    "$GIT" clone "$DOTFILES_REPOSITORY" "$DOTFILES_DIR" || die 'Git clone failed'
+    select_dotfiles_repository
+    GH=$(find_gh) || die 'GitHub CLI was not found after temporary activation'
+    if ! "$GH" auth status >/dev/null 2>&1; then
+      [ -r "$BOOTSTRAP_INPUT" ] || die 'GitHub CLI is not authenticated; run gh auth login or provide GH_TOKEN'
+      log 'Authenticating GitHub CLI'
+      "$GH" auth login --web --git-protocol https <"$BOOTSTRAP_INPUT" || die 'GitHub CLI authentication failed'
+    fi
+    log "Cloning private repository $DOTFILES_REPOSITORY"
+    "$GH" repo clone "$DOTFILES_REPOSITORY" "$DOTFILES_DIR" || die 'GitHub repository clone failed'
   fi
 }
 
