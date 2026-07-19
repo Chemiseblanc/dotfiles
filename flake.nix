@@ -30,6 +30,7 @@
           system,
           username,
           homeDirectory,
+          configurationName,
           hostModule,
           extraModules ? [ ],
         }:
@@ -44,6 +45,7 @@
             hostModule
             {
               home = { inherit username homeDirectory; };
+              home.sessionVariables.DOTFILES_CONFIG = configurationName;
             }
           ]
           ++ extraModules;
@@ -54,6 +56,7 @@
           system,
           username,
           homeDirectory,
+          configurationName,
           hostModule,
         }:
         nix-darwin.lib.darwinSystem {
@@ -87,6 +90,7 @@
                     ./platforms/darwin/home.nix
                   ];
                   home = { inherit username homeDirectory; };
+                  home.sessionVariables.DOTFILES_CONFIG = configurationName;
                 };
               };
             }
@@ -101,6 +105,7 @@
           system = "aarch64-darwin";
           username = "example";
           homeDirectory = "/Users/example";
+          configurationName = "example-darwin-aarch64";
           hostModule = ./hosts/example-darwin-aarch64.nix;
         };
       };
@@ -109,12 +114,14 @@
           system = "x86_64-linux";
           username = "example";
           homeDirectory = "/home/example";
+          configurationName = "example@linux-x86_64";
           hostModule = ./hosts/example-linux-x86_64.nix;
         };
         "example@linux-aarch64" = mkHome {
           system = "aarch64-linux";
           username = "example";
           homeDirectory = "/home/example";
+          configurationName = "example@linux-aarch64";
           hostModule = ./hosts/example-linux-aarch64.nix;
         };
       };
